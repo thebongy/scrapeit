@@ -1,4 +1,3 @@
-http://pokemondb.net/pokedex/all
-	(.cell-icon-string > .ent-name)
-		store .text* in pkname
-		store .href* in pklink
+http://money.rediff.com/index.html
+	(.rtnews_right > a)
+		store .text in test
