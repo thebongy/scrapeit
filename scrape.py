@@ -102,5 +102,9 @@ def eval(x,env=global_env):
 	elif x[1][0] == "store":
 	  if x[1].count("in") == 0:
 	    raise SyntaxError("'in' expected for store statement")
-
+	  if env["levels"][x[0]-1].__class__.__name__ == "DOMParser":
+	    env.update({x[1][3]:env["levels"][x[0]-1].parse(x[1][1].replace("*","").replace(".",""),x[1][1].endswith("*"))})
+	  elif env["levels"][x[0]-1].__class__.__name__ == "URL":
+	     env.update({x[1][3]:DOMParser("html",env["levels"][x[0]-1]).parse(x[1][1].replace("*","").replace(".",""),x[1][1].endswith("*"))})
+	return env
 run("pokemonscraper.scrape")
