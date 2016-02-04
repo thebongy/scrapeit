@@ -1,4 +1,4 @@
 http://pokemondb.net/pokedex/all
 	(.cell-icon-string > .ent-name)
-		store .text pkname
-		store .href pklink
+		store .text* in pkname
+		store .href* in pklink
