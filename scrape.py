@@ -6,14 +6,33 @@ Env = dict
 class DOMParser:
 	def __init__(self,parse,parent):
 		self.parser = parse
+		self.parsed = ""
+		self.data = []
 		if parent.__class__.__name__ == "URL":
 			self.parent = parent
 		else:
 			raise ValueError("Parent of Parser Object should be valid URL.")
-	def parse(self):
+	def parse(self,attr="default", strict=True):
 		from bs4 import BeautifulSoup
-		soup = BeautifulSoup(self.parent.getsource())
-		return soup.select(self.parser)
+		import urlparse
+		if self.parsed == "":
+		  soup = BeautifulSoup(self.parent.getsource())
+		  self.parsed = soup.select(self.parser)
+		if attr == "default":
+		  return self.parsed
+		elif attr == "text":
+		  return [parse.getText() for parse in self.parsed]
+		else:
+		  for parse in self.parsed:
+		    try:
+		      self.data.append(parse[attr])
+		    except KeyError:
+		      if strict:
+		        raise ValueError("[FATAL] Attribute " + str(attr) + " not found in data: " + str(parse))
+		      else:
+		        print "[IGNORE] Attribute " + str(attr) + " not found in data: " + str(parse)
+		  return self.data
+		
 class URL:
 	def __init__(self,url):
 		self.url = url
@@ -34,17 +53,20 @@ def tokenize(char):
 
 def parse(code):
 	i = 0
+	# Count number of tabs.
 	if code[0] == "\t":
 		while code[i] == "\t":
 			i += 1
+	# Set parser ahead of tabs
 	j = i
+	# Check for url parsers
 	if code[j] == "(":
 		try:
 			while code[j] != ")":
 				j += 1
 		except IndexError:
 			raise SyntaxError(") expected after (")
-		return [i,code[i:j+1]]	
+		return [i,code[i:j+1]]
 	if len(tokenize(code)) == 1:
 		return [i,tokenize(code)[0]]
 	else:
@@ -71,13 +93,14 @@ def eval(x,env=global_env):
 	if x[1][:4] == "http":
 		env["levels"].update({x[0]:URL(x[1])})
 	elif x[1][0] == "(":
-		try: 
+		try:
 			x[1] = x[1].replace("(","")
 			x[1] = x[1].replace(")","")
 			env["levels"].update({x[0]:DOMParser(x[1],env["levels"][x[0]-1])})
 		except KeyError:
 			raise ValueError("Parser expects URL declaration.")
 	elif x[1][0] == "store":
-		return "Variable Definition"
+	  if x[1].count("in") == 0:
+	    raise SyntaxError("'in' expected for store statement")
 
 run("pokemonscraper.scrape")
